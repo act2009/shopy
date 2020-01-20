@@ -263,3 +263,61 @@ function ParamsChecked($data,$params){
     return true;
 
 }
+
+/**
+ * @note:返回数据
+ * @author:{act2009}
+ * @time:2020/1/20
+ * @params:[string] $msg 返回信息
+ * @params:[int] $code 状态码
+ * @params:[mixed] $data 数据
+ * @return  [json] JSON数据
+ */
+function DataReturn($msg='',$code=0,$data=''){
+    // ajax的时候，success和error错误由当前方法接收
+    if(IS_AJAX){
+        if(isset($msg['info'])){
+            // success模式下code=0, error模式下code参数-1
+            $result=array('msg'=>$msg['info'],'code'=>-1,'data'=>$data);
+        }
+    }
+
+    // 默认情况下，手动调用当前方法
+    if(empty($result)){
+        $result=array('msg'=>$msg,'code'=>$code,'data'=>$data);
+    }
+    // 错误情况下，防止提示信息为空
+    if($result['code']!=0 && empty($result['msg'])){
+        $result['msg']='操作失败';
+    }
+
+    return $result;
+}
+
+
+/**
+ * @note:登录密码加密
+ * @author:{act2009}
+ * @time:2020/1/20
+ * @params:[string] $pwd
+ * @params:[string] $salt
+ * @return [string]  password]
+ */
+function LoginPwdEncryption($pwd,$salt){
+    return md5($salt.trim($pwd));
+}
+
+/**
+ * @note:随机数生成
+ * @author:{act2009}
+ * @time:2020/1/20
+ * @params:[int] $length
+ * @return:生成的随机数
+ */
+function GetNumberCode($length=6){
+    $code='';
+    for ($i=0;$i<intval($length);$i++){
+        $code.=rand(0,9);
+    }
+    return $code;
+}

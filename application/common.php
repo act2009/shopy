@@ -95,6 +95,166 @@ function ParamsChecked($data,$params){
         //是否需要验证
         $is_checked=true;
         //数字或字段需要验证
+        //数字存在即验证
+        //字符存在即验证
+
+        if(isset($v['is_checked'])){
+            if($v['is_checked']==1){
+                if(empty($data[$v['key_name']])){
+                    $is_checked=false;
+                }
+            }elseif ($v['is_checked']==2){
+                if(!isset($data[$v['key_name']])){
+                    $is_checked=false;
+                }
+            }
+        }
+        // 是否需要验证
+        if($v['is_checked']===false){
+            continue;
+        }
+
+        // 数据类型,默认字符串类型
+        $data_type=empty($v['data_type'])? 'string': $v['data_type'];
+        // 验证规则，默认isset
+        $checked_type=isset($v['checked_type'])? $v['checked_type'] : 'isset';
+
+        switch ($checked_type){
+            //是否存在
+            case 'isset':
+                if(!isset($data[$v['key_name']])){
+                    return $v['error_msg'];
+                }
+                break;
+               //是否为空
+            case 'empty':
+                if(empty($data[$v['key_name']])){
+                    return $v['error_msg'];
+                }
+                break;
+            // 是否存在于验证数组中
+            case 'in' :
+                if(empty($v['checked_data']) || !is_array($v['checked_data']))
+                {
+                    return '内部调用参数配置有误';
+                }
+                if(!isset($data[$v['key_name']]) || !in_array($data[$v['key_name']], $v['checked_data']))
+                {
+                    return $v['error_msg'];
+                }
+                break;
+
+            // 是否为数组
+            case 'is_array' :
+                if(!isset($data[$v['key_name']]) || !is_array($data[$v['key_name']]))
+                {
+                    return $v['error_msg'];
+                }
+                break;
+
+            // 长度
+            case 'length' :
+                if(!isset($v['checked_data']))
+                {
+                    return '长度规则值未定义';
+                }
+                if(!is_string($v['checked_data']))
+                {
+                    return '内部调用参数配置有误';
+                }
+                if(!isset($data[$v['key_name']]))
+                {
+                    return $v['error_msg'];
+                }
+                if($data_type == 'array')
+                {
+                    $length = count($data[$v['key_name']]);
+                } else {
+                    $length = mb_strlen($data[$v['key_name']], 'utf-8');
+                }
+                $rule = explode(',', $v['checked_data']);
+                if(count($rule) == 1)
+                {
+                    if($length > intval($rule[0]))
+                    {
+                        return $v['error_msg'];
+                    }
+                } else {
+                    if($length < intval($rule[0]) || $length > intval($rule[1]))
+                    {
+                        return $v['error_msg'];
+                    }
+                }
+                break;
+
+            // 自定义函数
+            case 'fun' :
+                if(empty($v['checked_data']) || !function_exists($v['checked_data']))
+                {
+                    return '验证函数为空或函数未定义';
+                }
+                $fun = $v['checked_data'];
+                if(!isset($data[$v['key_name']]) || !$fun($data[$v['key_name']]))
+                {
+                    return $v['error_msg'];
+                }
+                break;
+
+            // 最小
+            case 'min' :
+                if(!isset($v['checked_data']))
+                {
+                    return '验证最小值未定义';
+                }
+                if(!isset($data[$v['key_name']]) || $data[$v['key_name']] < $v['checked_data'])
+                {
+                    return $v['error_msg'];
+                }
+                break;
+
+            // 最大
+            case 'max' :
+                if(!isset($v['checked_data']))
+                {
+                    return '验证最大值未定义';
+                }
+                if(!isset($data[$v['key_name']]) || $data[$v['key_name']] > $v['checked_data'])
+                {
+                    return $v['error_msg'];
+                }
+                break;
+
+            // 相等
+            case 'eq' :
+                if(!isset($v['checked_data']))
+                {
+                    return '验证相等未定义';
+                }
+                if(!isset($data[$v['key_name']]) || $data[$v['key_name']] == $v['checked_data'])
+                {
+                    return $v['error_msg'];
+                }
+                break;
+
+            // 数据库唯一
+            case 'unique' :
+                if(!isset($v['checked_data']))
+                {
+                    return '验证唯一表参数未定义';
+                }
+                if(empty($data[$v['key_name']]))
+                {
+                    return $v['error_msg'];
+                }
+                $temp = db($v['checked_data'])->where([$v['key_name']=>$data[$v['key_name']]])->find();
+                if(!empty($temp))
+                {
+                    return $v['error_msg'];
+                }
+                break;
+
+
+        }
 
 
     }
